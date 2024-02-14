@@ -1,2 +1,2 @@
 run/tracker:
-	@go run main.go
+	@go run ./cmd/todo/main.go
