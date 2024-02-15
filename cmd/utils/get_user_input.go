@@ -7,7 +7,11 @@ import (
 	"io"
 	"strings"
 )
-
+// GetUserInput retrieves user input either from the provided arguments or by
+// reading from a reader stream, such as stdin. If arguments are passed, they are
+// joined into a single string. If no arguments are provided, the function reads
+// from the reader until a newline character is encountered. Returns an error if
+// the input is empty after trimming whitespace.
 func GetUserInput(reader io.Reader, args ...string) (string, error) {
 	if len(args) > 0 {
 		return strings.Join(args, " "), nil

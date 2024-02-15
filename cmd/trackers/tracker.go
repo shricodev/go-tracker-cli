@@ -14,6 +14,9 @@ import (
 	"github.com/shricodev/go-tracker-cli/cmd/utils"
 )
 
+// Add appends a new task to the list of trackers.
+// It sets the task, marks it as incomplete, records the creation timestamp,
+// and leaves the completion timestamp as NA.
 func (t *Trackers) Add(task string) {
 	tracker := Item{
 		Task:        task,
@@ -25,6 +28,8 @@ func (t *Trackers) Add(task string) {
 	*t = append(*t, tracker)
 }
 
+// Complete marks a tracker as completed by its index and updates the completion timestamp.
+// It returns an error if the index is invalid.
 func (t *Trackers) Complete(index int) error {
 	list := *t
 
@@ -37,6 +42,8 @@ func (t *Trackers) Complete(index int) error {
 	return nil
 }
 
+// Delete removes a tracker from the list by its index.
+// It returns an error if the index is invalid.
 func (t *Trackers) Delete(index int) error {
 	list := *t
 	if index < 0 || index > len(list) {
@@ -47,6 +54,9 @@ func (t *Trackers) Delete(index int) error {
 	return nil
 }
 
+// LoadTrackers reads trackers from a JSON file and loads them into the Trackers slice.
+// If the file does not exist, it creates a new one. It returns an error if the file
+// has an invalid type or cannot be parsed.
 func (t *Trackers) LoadTrackers(filename string) error {
 	file, err := os.ReadFile(filename)
 	if err != nil {
@@ -75,6 +85,8 @@ func (t *Trackers) LoadTrackers(filename string) error {
 	return nil
 }
 
+// Store writes the current state of the trackers to a JSON file.
+// It returns an error if the marshalling process fails or if the file cannot be written.
 func (t *Trackers) Store(filename string) error {
 	data, err := json.Marshal(t)
 	if err != nil {
@@ -84,6 +96,9 @@ func (t *Trackers) Store(filename string) error {
 	return os.WriteFile(filename, data, 0644)
 }
 
+// List prints a table representation of all trackers to the console, highlighting completed tasks.
+// It includes headers for ID, Task, Completion status, Created At, and Completed At timestamps.
+// The footer displays the total count of pending trackers.
 func (t *Trackers) List() {
 	table := simpletable.New()
 	table.Header = &simpletable.Header{
@@ -132,6 +147,7 @@ func (t *Trackers) List() {
 	table.Println()
 }
 
+// CountPending calculates and returns the total number of trackers that are not yet completed.
 func (t *Trackers) CountPending() int {
 	total := 0
 	for _, tracker := range *t {

@@ -9,6 +9,9 @@ import (
 	"github.com/shricodev/go-tracker-cli/cmd/utils"
 )
 
+// Main handles the command-line interface for the tracker CLI. It accepts various
+// flags to add, complete, delete, or list trackers. The trackers are loaded from
+// and stored to a JSON file named '.tracker.json'.
 func main() {
 	const trackerFile = ".tracker.json"
 
