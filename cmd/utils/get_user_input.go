@@ -7,6 +7,7 @@ import (
 	"io"
 	"strings"
 )
+
 // GetUserInput retrieves user input either from the provided arguments or by
 // reading from a reader stream, such as stdin. If arguments are passed, they are
 // joined into a single string. If no arguments are provided, the function reads
