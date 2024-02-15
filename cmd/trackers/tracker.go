@@ -1,33 +1,24 @@
 package tracker
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/alexeyco/simpletable"
+
+	"github.com/shricodev/go-tracker-cli/cmd/utils"
 )
 
-type item struct {
-	Task        string
-	Completed   bool
-	CreatedAt   string
-	CompletedAt string
-}
-
-type Trackers []item
-
 func (t *Trackers) Add(task string) {
-	tracker := item{
+	tracker := Item{
 		Task:        task,
 		Completed:   false,
-		CreatedAt:   time.Now().Format(time.RFC822),
+		CreatedAt:   time.Now().Format("Mon, 2006-01-02 15:04 PM"),
 		CompletedAt: "---",
 	}
 
@@ -38,10 +29,10 @@ func (t *Trackers) Complete(index int) error {
 	list := *t
 
 	if index < 0 || index > len(list) {
-		return errors.New("Invalid index")
+		return &utils.InvalidIndexError{Index: index}
 	}
 
-	list[index-1].CompletedAt = time.Now().Format(time.RFC822)
+	list[index-1].CompletedAt = time.Now().Format("Mon, 2006-01-02 15:04 PM")
 	list[index-1].Completed = true
 	return nil
 }
@@ -63,7 +54,7 @@ func (t *Trackers) LoadTrackers(filename string) error {
 		if errors.Is(err, os.ErrNotExist) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("failed to load trackers: %w", err)
 	}
 
 	fileExtension := strings.ToLower(filepath.Ext(filename))
@@ -78,7 +69,7 @@ func (t *Trackers) LoadTrackers(filename string) error {
 
 	err = json.Unmarshal(file, t)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshall trackers: %w", err)
 	}
 
 	return nil
@@ -87,7 +78,7 @@ func (t *Trackers) LoadTrackers(filename string) error {
 func (t *Trackers) Store(filename string) error {
 	data, err := json.Marshal(t)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshall trackers: %w", err)
 	}
 
 	return os.WriteFile(filename, data, 0644)
@@ -108,14 +99,14 @@ func (t *Trackers) List() {
 	var cells [][]*simpletable.Cell
 	for index, tracker := range *t {
 
-		task := blue(tracker.Task)
-		completed := red("no")
-		createdAt := gray(tracker.CreatedAt)
-		completedAt := gray(tracker.CompletedAt)
+		task := utils.Blue(tracker.Task)
+		completed := utils.Red("no")
+		createdAt := utils.Gray(tracker.CreatedAt)
+		completedAt := utils.Gray(tracker.CompletedAt)
 
 		if tracker.Completed {
-			task = green(fmt.Sprintf("\u2705 %s", tracker.Task))
-			completed = green("yes")
+			task = utils.Green(fmt.Sprintf("\u2705 %s", tracker.Task))
+			completed = utils.Green("yes")
 		}
 
 		cells = append(cells, *&[]*simpletable.Cell{
@@ -133,36 +124,15 @@ func (t *Trackers) List() {
 
 	table.Footer = &simpletable.Footer{
 		Cells: []*simpletable.Cell{
-			{Align: simpletable.AlignCenter, Span: 5, Text: red(fmt.Sprintf("You have %d pending trackers", t.CountPendingTrackers()))},
+			{Align: simpletable.AlignCenter, Span: 5, Text: utils.Red(fmt.Sprintf("You have %d pending trackers", t.CountPending()))},
 		},
 	}
 
-	table.SetStyle(simpletable.StyleUnicode)
+	table.SetStyle(simpletable.StyleRounded)
 	table.Println()
 }
 
-func GetUserInput(reader io.Reader, args ...string) (string, error) {
-	if len(args) > 0 {
-		return strings.Join(args, " "), nil
-	}
-
-	// When the user sends the data from a pipe command
-	scanner := bufio.NewScanner(reader)
-	scanner.Scan()
-	if err := scanner.Err(); err != nil {
-		return "", err
-	}
-
-	text := strings.TrimSpace(scanner.Text())
-
-	if len(text) == 0 {
-		return "", errors.New("Cannot add an empty Tracker")
-	}
-
-	return text, nil
-}
-
-func (t *Trackers) CountPendingTrackers() int {
+func (t *Trackers) CountPending() int {
 	total := 0
 	for _, tracker := range *t {
 		if !tracker.Completed {

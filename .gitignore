@@ -1,2 +1,2 @@
 .tracker.json
-/cmd/todo/todo 
+**/go-tracker-cli
