@@ -1,6 +1,6 @@
 module github.com/shricodev/go-tracker-cli
 
-go 1.21.6
+go 1.22.0
 
 require github.com/alexeyco/simpletable v1.0.0
 
